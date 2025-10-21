@@ -1,0 +1,57 @@
+# === Java / Maven build ===
+target/
+!**/.mvn/wrapper/maven-wrapper.jar
+.mvn/timing.properties
+
+# === Logs & reports ===
+*.log
+logs/
+**/surefire-reports/
+**/failsafe-reports/
+jacoco.exec
+.sonar/
+site/
+
+# === IDE / Editor ===
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+.factorypath
+.vscode/
+*.code-workspace
+
+# === OS / Misc ===
+.DS_Store
+Thumbs.db
+
+# === Java artifacts ===
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+replay_pid*
+
+# === Local env & secrets (keep config in templates if needed) ===
+.env
+.env.*
+.env.local
+*.local.properties
+
+# === Databases / runtime dumps ===
+dump.rdb
+*.db
+*.sqlite
+*.pid
+*.out
+*.seed
+
+
