@@ -1,0 +1,74 @@
+package rules;
+import java.math.BigDecimal;
+import com.bank.risk.common.dto.FxRiskReq;
+import com.bank.risk.feature.FeatureService;
+
+rule "R_CROSS_RATIO_EURJPY" salience 95
+when
+  $ctx: FxRiskReq( symbol == "EURJPY" )
+  $feat: FeatureService()
+then
+  BigDecimal eurusd = $feat.mid("EURUSD");
+  BigDecimal usdjpy = $feat.mid("USDJPY");
+  BigDecimal m = $feat.mid("EURJPY");
+  if(eurusd!=null && usdjpy!=null && m!=null){
+    BigDecimal theo = eurusd.multiply(usdjpy);
+    BigDecimal dev = m.subtract(theo).abs().divide(theo, 8, java.math.RoundingMode.HALF_UP);
+    if(dev.compareTo(new BigDecimal("0.0015"))>0){
+      // mark as REVIEW/DENY in real impl
+    }
+  }
+end
+
+rule "R_PER_ORDER_LIMIT" salience 90
+when
+  $ctx: FxRiskReq( type == "ORDER", $sym: symbol, $ten: tenor, $qty: qty )
+then
+  java.math.BigDecimal limit = new java.math.BigDecimal($ten.equals("SPOT")?"5000000":"3000000");
+  if($qty!=null && $qty.compareTo(limit)>0){
+    // REVIEW
+  }
+end
+
+rule "R_ARB_PNL_WARN" salience 85
+when
+  $ctx: FxRiskReq( )
+  $feat: FeatureService()
+then
+  if($feat.pnlArb("deskDefault", 3600).compareTo(new BigDecimal("-20000"))<0){
+    // REVIEW
+  }
+end
+
+rule "R_NET_EXPOSURE_LIMIT" salience 80
+when
+  $ctx: FxRiskReq( $sym: symbol, $ten: tenor, $book: book )
+  $feat: FeatureService()
+then
+  BigDecimal ne = $feat.netExposureUsd($sym,$ten,$book);
+  BigDecimal lim = new BigDecimal("10000000");
+  if(ne.compareTo(lim)>0){
+    // DENY
+  }
+end
+
+rule "R_PASSIVE_HEDGE_PNL" salience 70
+when
+  $ctx: FxRiskReq( type == "ORDER" )
+  $feat: FeatureService()
+then
+  BigDecimal slip = $feat.hedgeSlippage($ctx.symbol(), String.valueOf(System.currentTimeMillis()/1000));
+  if(slip!=null && slip.compareTo(new BigDecimal("0.0008"))>0){
+    // REVIEW/PAUSE HEDGE
+  }
+end
+
+rule "R_PNL_LOCK" salience 60
+when
+  $ctx: FxRiskReq( )
+  $feat: FeatureService()
+then
+  if ($feat.pnlToday("deskDefault").compareTo(new BigDecimal("-100000")) < 0) {
+    // LOCK + DENY
+  }
+end

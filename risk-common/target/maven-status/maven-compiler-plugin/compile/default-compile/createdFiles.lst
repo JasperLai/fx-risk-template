@@ -1,0 +1,5 @@
+com/bank/risk/common/dto/FxRiskReq.class
+com/bank/risk/common/model/DecisionTrace.class
+com/bank/risk/common/model/RuleHit.class
+com/bank/risk/common/dto/RiskResponse.class
+com/bank/risk/common/dto/Decision.class

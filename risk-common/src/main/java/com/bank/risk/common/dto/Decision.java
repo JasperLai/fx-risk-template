@@ -1,0 +1,1 @@
+package com.bank.risk.common.dto; public enum Decision { ALLOW, REVIEW, DENY, LOCK }

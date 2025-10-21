@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS rc_audit (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  decision_id VARCHAR(64) NOT NULL,
+  policy_version VARCHAR(32),
+  req_type VARCHAR(16),
+  symbol VARCHAR(16),
+  result VARCHAR(8),
+  reasons JSON,
+  features JSON,
+  latency_ms INT,
+  ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS fx_limit_exposure (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  book VARCHAR(32), symbol VARCHAR(16), tenor VARCHAR(16), limit_usd DECIMAL(20,4)
+);
+CREATE TABLE IF NOT EXISTS fx_limit_pnl (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  scope VARCHAR(32), warn_usd DECIMAL(20,4), lock_usd DECIMAL(20,4)
+);

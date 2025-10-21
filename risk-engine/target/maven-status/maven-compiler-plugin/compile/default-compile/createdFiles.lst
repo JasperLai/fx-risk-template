@@ -1,0 +1,5 @@
+com/bank/risk/engine/DroolsConfig.class
+com/bank/risk/engine/RiskService.class
+com/bank/risk/engine/FastLayer.class
+com/bank/risk/engine/YamlPolicyRepository.class
+com/bank/risk/engine/PolicyRepository.class
