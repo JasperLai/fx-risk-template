@@ -105,3 +105,52 @@ curl -s http://localhost:8088/api/event/cancel \
 3. 调用 `/api/risk/check` 发起一次评估，观察 `reasons` 与 `debug` 字段；`decision` 受 `rules/fx_rules.drl` 与 `policies/fx-policy.yaml` 影响。
 4. 如需调整策略参数，在 `risk-engine/src/main/resources/policies/fx-policy.yaml` 中修改（示例包含 EURUSD/EURJPY 与 SPOT/1W/1M），重启服务生效。
 5. 审计库建表可使用 `scripts/sql/mysql_audit.ddl.sql` 或 `scripts/sql/clickhouse_audit.ddl.sql`。
+
+## 配置说明（FastLayer 可调参数）
+FastLayer 的阈值来自 `risk-engine/src/main/resources/policies/fx-policy.yaml`（通过 `YamlPolicyRepository` 加载为 `cfg`）。若未配置会采用合理的默认值。
+
+### throttle（节流/撤单率）
+- `throttle.qps.perTraderPer5s`：每交易员 5 秒窗口最大请求数。默认 5。
+- `throttle.cancel.windowSec`：撤单率统计窗口秒数。默认 10。
+- `throttle.cancel.maxRate`：撤单率上限（超出进入 REVIEW）。默认 0.7。
+
+对应 YAML 示例：
+```yaml
+throttle:
+  qps:
+    perTraderPer5s: 5
+  cancel:
+    windowSec: 10
+    maxRate: 0.7
+```
+
+### policy.symbols.<symbol>（价格带与点差范围）
+- `policy.symbols.<symbol>.maxDevPips`：价格偏离 mid 的最大 pips。默认：JPY 尾标 12，其他 10。
+- `policy.symbols.<symbol>.minSpreadPips`：最小点差 pips，默认 1。
+- `policy.symbols.<symbol>.maxSpreadPips`：最大点差 pips，默认 30。
+
+对应 YAML 片段（示例）：
+```yaml
+policy:
+  symbols:
+    EURUSD:
+      maxDevPips: 10
+      minSpreadPips: 1
+      maxSpreadPips: 25
+    EURJPY:
+      maxDevPips: 12
+      minSpreadPips: 1
+      maxSpreadPips: 30
+```
+
+### whitelist（白名单）
+FastLayer 将从 `whitelist` 中匹配 `scope=TRADER` 且 `subject=<trader>` 的条目命中后直接放行。
+
+示例：
+```yaml
+whitelist:
+  - scope: TRADER
+    subject: trader_vip_001
+    relax:
+      skipRules: [R_THROTTLE, R_CANCEL_RATE]
+```
