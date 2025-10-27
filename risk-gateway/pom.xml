@@ -9,6 +9,8 @@
     <dependency><groupId>com.bank</groupId><artifactId>risk-engine</artifactId><version>0.1.0</version></dependency>
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId></dependency>
     <dependency><groupId>redis.clients</groupId><artifactId>jedis</artifactId><version>${jedis.version}</version></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-jdbc</artifactId></dependency>
+    <dependency><groupId>com.mysql</groupId><artifactId>mysql-connector-j</artifactId></dependency>
   </dependencies>
   <build>
     <plugins>

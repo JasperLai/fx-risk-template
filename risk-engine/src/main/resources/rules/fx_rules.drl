@@ -3,6 +3,11 @@ import java.math.BigDecimal;
 import com.bank.risk.common.dto.FxRiskReq;
 import com.bank.risk.common.dto.OrderType;
 import com.bank.risk.feature.FeatureService;
+import com.bank.risk.common.dto.Decision;
+import com.bank.risk.common.model.RuleHit;
+
+global java.util.List hits;
+global java.util.concurrent.atomic.AtomicReference decisionRef;
 
 rule "R_CROSS_RATIO_EURJPY" salience 95
 when
@@ -16,7 +21,10 @@ then
     BigDecimal theo = eurusd.multiply(usdjpy);
     BigDecimal dev = m.subtract(theo).abs().divide(theo, 8, java.math.RoundingMode.HALF_UP);
     if(dev.compareTo(new BigDecimal("0.0015"))>0){
-      // mark as REVIEW/DENY in real impl
+      hits.add(new RuleHit("R_CROSS_RATIO_EURJPY", "dev=" + dev));
+      if (decisionRef.get().compareTo(Decision.REVIEW) < 0) {
+        decisionRef.set(Decision.REVIEW);
+      }
     }
   }
 end
@@ -27,7 +35,10 @@ when
 then
   java.math.BigDecimal limit = new java.math.BigDecimal($ten.equals("SPOT")?"5000000":"3000000");
   if($qty!=null && $qty.compareTo(limit)>0){
-    // REVIEW
+    hits.add(new RuleHit("R_PER_ORDER_LIMIT", "qty>" + limit));
+    if (decisionRef.get().compareTo(Decision.REVIEW) < 0) {
+      decisionRef.set(Decision.REVIEW);
+    }
   }
 end
 
@@ -37,7 +48,10 @@ when
   $feat: FeatureService()
 then
   if($feat.pnlArb("deskDefault", 3600).compareTo(new BigDecimal("-20000"))<0){
-    // REVIEW
+    hits.add(new RuleHit("R_ARB_PNL_WARN", "arbPnL<warn"));
+    if (decisionRef.get().compareTo(Decision.REVIEW) < 0) {
+      decisionRef.set(Decision.REVIEW);
+    }
   }
 end
 
@@ -49,7 +63,10 @@ then
   BigDecimal ne = $feat.netExposureUsd($sym,$ten,$book);
   BigDecimal lim = new BigDecimal("10000000");
   if(ne.compareTo(lim)>0){
-    // DENY
+    hits.add(new RuleHit("R_NET_EXPOSURE_LIMIT", "ne>" + lim));
+    if (decisionRef.get().compareTo(Decision.DENY) < 0) {
+      decisionRef.set(Decision.DENY);
+    }
   }
 end
 
@@ -60,7 +77,10 @@ when
 then
   BigDecimal slip = $feat.hedgeSlippage($ctx.symbol(), String.valueOf(System.currentTimeMillis()/1000));
   if(slip!=null && slip.compareTo(new BigDecimal("0.0008"))>0){
-    // REVIEW/PAUSE HEDGE
+    hits.add(new RuleHit("R_PASSIVE_HEDGE_PNL", "slip>0.0008"));
+    if (decisionRef.get().compareTo(Decision.REVIEW) < 0) {
+      decisionRef.set(Decision.REVIEW);
+    }
   }
 end
 
@@ -70,6 +90,9 @@ when
   $feat: FeatureService()
 then
   if ($feat.pnlToday("deskDefault").compareTo(new BigDecimal("-100000")) < 0) {
-    // LOCK + DENY
+    hits.add(new RuleHit("R_PNL_LOCK", "pnlToday<lock"));
+    if (decisionRef.get().compareTo(Decision.LOCK) < 0) {
+      decisionRef.set(Decision.LOCK);
+    }
   }
 end
