@@ -14,12 +14,13 @@ import java.nio.file.Paths;
 @RequestMapping("/api/risk")
 public class RiskController {
   private final RiskService risk;
+  private final RuleRuntime runtime;
 
   public RiskController(JedisPooled jedis, DataSource dataSource) throws IOException {
     String script = new String(Files.readAllBytes(Paths.get("feature-service/src/main/resources/lua/win_incr.lua")));
     FeatureService feat = new RedisFeatureService(jedis, jedis.scriptLoad(script));
-    RuleRuntime runtime = new RuleRuntime(new JdbcStrategyRuleRepository(dataSource));
-    risk = new RiskService(feat, new YamlPolicyRepository(), runtime);
+    this.runtime = new RuleRuntime(new JdbcStrategyRuleRepository(dataSource));
+    risk = new RiskService(feat, new YamlPolicyRepository(), this.runtime);
   }
 
   @PostMapping("/check")

@@ -30,6 +30,20 @@ public class RuleRuntime {
     return ks;
   }
 
+  /**
+   * 仅从缓存获取会话，不触发任何数据库读取或编译。
+   * 若缓存不存在，返回 null，由调用方自行决定回退策略。
+   */
+  public KieSession getCachedSession(String strategyId, String agendaGroup) {
+    KieContainer kc = cache.get(strategyId);
+    if (kc == null) return null;
+    KieSession ks = kc.newKieSession();
+    if (agendaGroup != null && !agendaGroup.isEmpty()) {
+      ks.getAgenda().getAgendaGroup(agendaGroup).setFocus();
+    }
+    return ks;
+  }
+
   public void invalidate(String strategyId) {
     cache.remove(strategyId);
   }

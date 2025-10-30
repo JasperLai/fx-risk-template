@@ -35,7 +35,8 @@ public class RiskService {
     String strategyId = req.attrs()==null? null : String.valueOf(req.attrs().getOrDefault("strategyId", ""));
     KieSession ks = null;
     if (strategyId != null && !strategyId.isEmpty()) {
-      ks = ruleRuntime.getSession(strategyId, "s_" + strategyId);
+      // 仅从缓存取，避免请求路径查库或编译；缓存由发布流程预热
+      ks = ruleRuntime.getCachedSession(strategyId, "s_" + strategyId);
     }
     if (ks == null) {
       ks = kc.newKieSession("fxSession");
